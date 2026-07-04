@@ -2,6 +2,7 @@
 package com.example;
 
 import com.example.ai.AiChatMod;
+import com.example.commands.AiCommands;
 import com.example.commands.DuckyCommands;
 import com.example.commands.PandaCommands;
 import com.example.general.CooldownWarpDetector;
@@ -24,6 +25,7 @@ public class ClientInit implements ClientModInitializer {
 		Autofishing.register();
 		com.example.client.ModClient.register();
 		DuckyCommands.register();
+		AiCommands.register();
 		com.example.chat.ChatResponder.register();
 		CommandDetector.register();
 		SameLobbyDetector.register();

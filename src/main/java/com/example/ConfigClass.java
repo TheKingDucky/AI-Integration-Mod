@@ -25,7 +25,13 @@ public class ConfigClass {
     public boolean warpCooldownEnabled = true;
     public boolean sameLobbyDetectorEnabled = true;
     public boolean turtleOne = false;
-    public double fishingSensitivity = 0.01D; // default, matches the old constant
+    public double fishingSensitivity = 0.01D;
+    public volatile String systemInstructionPart1 =
+            "Keep responses concise, ideally under 500 characters, since they need to fit into Minecraft chat messages. Do not use markdown formatting, asterisks, or emojis, since Minecraft chat can't render them.";
+    public volatile String systemInstructionPart2 =
+            " ";
+    public volatile String systemInstructionPart3 =
+            " ";// default, matches the old constant
 
     public static void load() {
         if (Files.exists(PATH)) {
