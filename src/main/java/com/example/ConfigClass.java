@@ -17,6 +17,7 @@ public class ConfigClass {
     public static ConfigClass INSTANCE = new ConfigClass();
 
     public boolean chatEnabled = true;
+    public boolean airesponseEnabled = false;
     public boolean pandaEnabled = false;
     public boolean turtleEnabled = false;
     public boolean fishingEnabled = false;

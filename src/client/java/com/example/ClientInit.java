@@ -1,6 +1,7 @@
 
 package com.example;
 
+import com.example.ai.AiChatMod;
 import com.example.commands.DuckyCommands;
 import com.example.commands.PandaCommands;
 import com.example.general.CooldownWarpDetector;
@@ -30,6 +31,8 @@ public class ClientInit implements ClientModInitializer {
 		//TurtleCoordsKeybind.register();
 		ConfigClass.load();
 		SameLobbyDetector.setEnabled(ConfigClass.INSTANCE.sameLobbyDetectorEnabled);
+
+		new AiChatMod().onInitializeClient();
 
 
 		//com.example.chat.ChatResponder.enabled = true; // optional: start enabled
