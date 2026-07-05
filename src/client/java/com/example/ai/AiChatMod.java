@@ -53,13 +53,13 @@ public class AiChatMod implements ClientModInitializer {
 
     // --- Config ---
     private static final String PREFIX = "?gpt ";
-    private static final long COOLDOWN_MS = 8000; // 8 seconds between requests
+    private static final long COOLDOWN_MS = 5000; // 5 seconds between requests
     private static final String MODEL = "gemini-2.5-flash";
 
     // Overall cap on how much of the model's answer we'll ever relay, regardless of how
     // many chat messages that takes. Keeps one huge answer from turning into a wall of
     // 15+ messages. Raise/lower this to trade off completeness vs. chat spam.
-    private static final int MAX_TOTAL_REPLY_LENGTH = 600;
+    private static final int MAX_TOTAL_REPLY_LENGTH = 1000;
 
     // Minecraft's vanilla per-message character limit (with a little safety margin).
     private static final int MAX_MESSAGE_LENGTH = 250;
@@ -78,12 +78,7 @@ public class AiChatMod implements ClientModInitializer {
     // immediately visible to other threads (e.g. the background network thread running
     // queryGemini) rather than a stale cached copy. Changing any piece takes effect on
     // the very next ?gpt trigger — no restart, no reload, nothing else needed.
-    public static volatile String systemInstructionPart1 =
-            "Keep responses concise, ideally under 500 characters, since they need to ";
-    public static volatile String systemInstructionPart2 =
-            "fit into Minecraft chat messages. Do not use markdown formatting, ";
-    public static volatile String systemInstructionPart3 =
-            "asterisks, or emojis, since Minecraft chat can't render them.";
+
 
     // Delay between consecutive split messages so it doesn't look/behave like spam and
     // doesn't trip server-side anti-spam throttling.
@@ -405,7 +400,7 @@ public class AiChatMod implements ClientModInitializer {
         try {
             String escapedPrompt = jsonEscape(prompt);
             String escapedSystemInstruction = jsonEscape(
-                    systemInstructionPart1 + systemInstructionPart2 + systemInstructionPart3
+                    ConfigClass.INSTANCE.systemInstructionPart1 + ConfigClass.INSTANCE.systemInstructionPart2 + ConfigClass.INSTANCE.systemInstructionPart3
             );
 
             String body = "{"
