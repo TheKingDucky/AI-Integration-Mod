@@ -1,7 +1,7 @@
 
 package com.example.client;
 
-import com.example.turtle.TurtleTracker;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 //
@@ -19,8 +19,6 @@ import org.lwjgl.glfw.GLFW;
 public final class ModClient {
 
     private static KeyMapping OPEN_SETTINGS_KEY;
-    private static KeyMapping SEND_TURTLE_COORDS_KEY;
-
     // request flag used by commands to safely open GUI next tick
     private static volatile boolean pendingOpenRequested = false;
 
@@ -48,17 +46,10 @@ public final class ModClient {
                 )
         );
 
-        SEND_TURTLE_COORDS_KEY = KeyMappingHelper.registerKeyMapping(
-                new KeyMapping(
-                        "key.ducky.send_turtle_coords",
-                        InputConstants.Type.KEYSYM,
-                        GLFW.GLFW_KEY_K,
-                        CATEGORY
-                )
-        );
+
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (OPEN_SETTINGS_KEY == null || SEND_TURTLE_COORDS_KEY == null) return;
+            if (OPEN_SETTINGS_KEY == null) return;
 
             if (pendingOpenRequested) {
                 pendingOpenRequested = false;
@@ -69,10 +60,6 @@ public final class ModClient {
                 client.setScreen(new SettingsScreen(Component.literal("Mod Settings")));
             }
 
-            while (SEND_TURTLE_COORDS_KEY.consumeClick()) {
-                TurtleTracker.sendTurtleCoords();
-
-            }
         });
     }
 

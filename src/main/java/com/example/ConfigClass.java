@@ -16,16 +16,9 @@ public class ConfigClass {
 
     public static ConfigClass INSTANCE = new ConfigClass();
 
-    public boolean chatEnabled = true;
+
     public boolean airesponseEnabled = false;
-    public boolean pandaEnabled = false;
-    public boolean turtleEnabled = false;
-    public boolean fishingEnabled = false;
-    public boolean chatMessageSenderEnabled = true;
-    public boolean warpCooldownEnabled = true;
-    public boolean sameLobbyDetectorEnabled = true;
-    public boolean turtleOne = false;
-    public double fishingSensitivity = 0.01D;
+
     public volatile String systemInstructionPart1 =
             "Keep responses concise, ideally under 500 characters, since they need to fit into Minecraft chat messages. Do not use markdown formatting, asterisks, or emojis, since Minecraft chat can't render them.";
     public volatile String systemInstructionPart2 =

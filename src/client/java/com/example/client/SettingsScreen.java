@@ -158,9 +158,9 @@ public class SettingsScreen extends Screen {
     private static int BUTTON_CENTER_OFFSET = 0;
 
     // Top of the scrollable list area (below the title)
-    private static int LIST_TOP = 40;
+    private static int LIST_TOP = 80;
     // Reserved space at the bottom for the Done button + a little breathing room
-    private static int FOOTER_HEIGHT = 34;
+    private static int FOOTER_HEIGHT = 120;
 
     private static final String TITLE_TEXT = "Ducky Mod";
     private static int TITLE_X = 20;
@@ -191,21 +191,6 @@ public class SettingsScreen extends Screen {
         scrollableButtons.clear();
 
         final int centerX = this.width / 2 + BUTTON_CENTER_OFFSET;
-
-        addScrollableButton("Pandas (open)", (btn) ->
-                this.minecraft.setScreen(new PandaSettingsScreen(Component.literal("Panda Settings"))), centerX);
-
-        addScrollableButton("Chatting (open)", (btn) ->
-                this.minecraft.setScreen(new ChatSettingsScreen(Component.literal("Chatting"))), centerX);
-
-        addScrollableButton("General (open)", (btn) ->
-                this.minecraft.setScreen(new GeneralSettingsScreen(Component.literal("General"))), centerX);
-
-        addScrollableButton("Turtles (open)", (btn) ->
-                this.minecraft.setScreen(new TurtleSettingsScreen(Component.literal("Turtle Settings"))), centerX);
-
-        addScrollableButton("Fishing (open)", (btn) ->
-                this.minecraft.setScreen(new FishingSettingsScreen(Component.literal("Fishing Settings"))), centerX);
 
         addScrollableButton("AI (open)", (btn) ->
                 this.minecraft.setScreen(new AiSettingsScreen(Component.literal("AI Settings"))), centerX);
@@ -315,12 +300,9 @@ public class SettingsScreen extends Screen {
     }
 
     private static class ConfigData {
-        boolean pandasEnabled;
-        boolean someOtherFeature;
         ConfigData() {}
         ConfigData(boolean p, boolean o) {
-            this.pandasEnabled = p;
-            this.someOtherFeature = o;
+
         }
     }
 }
