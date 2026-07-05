@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
-	"id": "ducky-mod",
+	"id": "ai-integration-mod",
 	"version": "${version}",
-	"name": "Ducky Mod",
-	"description": "tuff asl mod icl ts pmo ong fr typesht!",
+	"name": "Ai Integration Mod",
+	"description": "amazing mod amazeballs haha",
 	"authors": [
 		"Ducky!"
 	],
@@ -12,7 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/ducky/icon.png",
+	"icon": "assets/ai/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
