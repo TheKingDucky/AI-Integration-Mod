@@ -12,17 +12,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Client helper that registers keybindings and opens the SettingsScreen.
- * Call ModClient.register() from your existing ClientInit.onInitializeClient().
- */
+
 public final class ModClient {
 
     private static KeyMapping OPEN_SETTINGS_KEY;
-    // request flag used by commands to safely open GUI next tick
+
     private static volatile boolean pendingOpenRequested = false;
 
-    // Register a custom KeyMapping.Category
+
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(
                     Identifier.fromNamespaceAndPath("ducky", "controls")
@@ -30,11 +27,7 @@ public final class ModClient {
 
     private ModClient() {}
 
-    /**
-     * Call this from ClientInit.onInitializeClient():
-     *
-     * com.example.client.ModClient.register();
-     */
+
     public static void register() {
 
         OPEN_SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(
@@ -63,15 +56,11 @@ public final class ModClient {
         });
     }
 
-    /**
-     * Called by commands (like /ducky) to request opening settings.
-     * Safe to call from command handlers.
-     */
+
     public static void requestOpenSettings() {
         pendingOpenRequested = true;
     }
 
-    /** small helper so other code can open the settings screen directly */
     public static void openSettings() {
         Minecraft.getInstance().setScreen(
                 new SettingsScreen(Component.literal("Mod Settings"))

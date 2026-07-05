@@ -15,15 +15,15 @@ public class AiSettingsScreen extends Screen {
     private static int BUTTON_CENTER_OFFSET = 0;
     private static int BUTTON_START_Y = 80;
 
-    // renamed from otherEnabled -> chatEnabled
+
     private boolean aiEnabled = true;
-    // renamed UI fields
+
     private Button aiToggleButton;
     private Button backButton;
 
     public AiSettingsScreen(Component title) {
         super(title);
-        // initialize with current global state
+
         this.aiEnabled = ConfigClass.INSTANCE.airesponseEnabled;
     }
 
@@ -35,7 +35,8 @@ public class AiSettingsScreen extends Screen {
         final int startY = BUTTON_START_Y;
         final int spacing = BUTTON_SPACING;
 
-        // toggle now controls ChatResponder.enabled
+
+
         aiToggleButton = Button.builder(toggleText("AI Response Feature", aiEnabled), (btn) -> {
             aiEnabled = !aiEnabled;
             btn.setMessage(toggleText("AI Response Feature", aiEnabled));
@@ -52,7 +53,7 @@ public class AiSettingsScreen extends Screen {
                     }
                 }
             } catch (Throwable t) {
-                // defensive: don't crash the UI if messaging fails
+
                 t.printStackTrace();
             }
         }).bounds(centerX - BUTTON_WIDTH / 2, startY, BUTTON_WIDTH, BUTTON_HEIGHT).build();

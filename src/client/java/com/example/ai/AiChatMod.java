@@ -29,59 +29,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Listens to chat messages received by the client (i.e. any message any player on the
- * server sends, including yourself) for a "?gpt <prompt>" trigger. When triggered, it
- * queries Gemini and then SENDS the reply as a real chat message from your own account,
- * visible to everyone on the server. If the reply is too long for one Minecraft chat
- * message, it's split across multiple messages instead of being cut off.
- *
- * IMPORTANT: unlike a purely local/client-side assistant, this means any player on the
- * server can cause your account to publicly post AI-generated text. Many servers treat
- * this kind of automated trigger -> auto-post behavior as a chat bot/macro, which can
- * violate server rules even though no packets are being spoofed or protocol is being
- * abused. Consider restricting who can trigger this (e.g. only your own UUID) before
- * using it on a server you don't control.
- *
- * Written for Minecraft 26.1.2 using Mojang's official mappings, Fabric API.
- */
+
 public class AiChatMod implements ClientModInitializer {
 
-    // Lets other classes (like your command handler) reach this running instance,
-    // the same way ConfigClass.INSTANCE works. Set once, in onInitializeClient().
     public static AiChatMod INSTANCE;
 
-    // --- Config ---
+    // le configuracion
     private static final String PREFIX = "?gpt ";
     private static final long COOLDOWN_MS = 5000; // 5 seconds between requests
     private static final String MODEL = "gemini-2.5-flash";
 
-    // Overall cap on how much of the model's answer we'll ever relay, regardless of how
-    // many chat messages that takes. Keeps one huge answer from turning into a wall of
-    // 15+ messages. Raise/lower this to trade off completeness vs. chat spam.
+    // cap of model response relayed
     private static final int MAX_TOTAL_REPLY_LENGTH = 1000;
 
-    // Minecraft's vanilla per-message character limit (with a little safety margin).
+    // Minecraft's vanilla per-message character limit with a little safety margin
     private static final int MAX_MESSAGE_LENGTH = 250;
 
-    // Persistent behavior instructions sent with every request — this is where you
-    // control tone, personality, formatting rules, length constraints, etc. without
-    // needing to repeat any of it in every prompt.
-    //
-    // Split into three separately-settable pieces so a command like
-    // "/duckymod airesponse systeminstruction 2 <text>" can target just one piece
-    // without needing to know or retype the other two. They're just concatenated
-    // together, in order, when the request is actually built in queryGemini().
-    //
-    // NOT final/private: meant to be reassigned at runtime. "volatile" guarantees a
-    // change made on one thread (e.g. your command handler, on the client thread) is
-    // immediately visible to other threads (e.g. the background network thread running
-    // queryGemini) rather than a stale cached copy. Changing any piece takes effect on
-    // the very next ?gpt trigger — no restart, no reload, nothing else needed.
 
-
-    // Delay between consecutive split messages so it doesn't look/behave like spam and
-    // doesn't trip server-side anti-spam throttling.
     private static final long SPLIT_MESSAGE_DELAY_MS = 700;
 
     private String apiKey;
@@ -95,21 +59,13 @@ public class AiChatMod implements ClientModInitializer {
         INSTANCE = this;
         loadConfig();
 
-        // ClientReceiveMessageEvents.CHAT fires for any chat message the client receives,
-        // meaning any player on the server (not just you) can trigger it. This is a
-        // listen-only event (nothing here cancels or hides the message), so the trigger
-        // message displays normally to everyone, exactly like it would without this mod.
-        // Player chat messages (signed, vanilla-style "<name> message").
+
         ClientReceiveMessageEvents.CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
             String triggeredBy = sender != null ? sender.toString() : "unknown";
             checkForTrigger(message, triggeredBy);
         });
 
-        // Game/system messages. Many servers with custom chat formatting (party chat,
-        // guild chat, rank-prefixed chat like "[MVP+] Name: ...") deliver their chat
-        // through the system-message channel instead of signed player chat, because the
-        // custom formatting doesn't fit the vanilla chat-signing system. Without this,
-        // the mod would never see chat on those servers at all.
+        //game/system message because chat detection is WEIRD
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             if (!overlay) {
                 checkForTrigger(message, "system/game message");
@@ -127,10 +83,7 @@ public class AiChatMod implements ClientModInitializer {
             return;
         }
 
-        // The received line is the full formatted chat line (e.g. "<Player495> ?gpt
-        // hello", or on some servers something like "§9Party §8> §b[MVP+] Name: ?gpt
-        // hello"), not just the raw text you typed. So we look for "?gpt " anywhere in
-        // the line rather than requiring it at position 0.
+
         int triggerIndex = content.indexOf(PREFIX);
         if (triggerIndex < 0) {
             return;
@@ -144,22 +97,13 @@ public class AiChatMod implements ClientModInitializer {
         handleTrigger(prompt, replyPrefix);
     }
 
-    /**
-     * Figures out which channel the trigger came from (based on the same formatting
-     * patterns your other feature already uses) and returns the command prefix needed
-     * to reply into that same channel. Empty string means "just send to normal/public
-     * chat" (no slash command needed).
-     */
+
     private String determineReplyPrefix(String content) {
         if (content.contains("§2Guild >")) {
             return "/gc ";
         } else if (content.contains("§9Party §8>")) {
             return "/pc ";
         } else if (content.contains("From")) {
-            // Hypixel-style private message. Note: /r always replies to whoever most
-            // recently whispered you — if another whisper arrives in the few hundred ms
-            // between the trigger and the AI reply coming back, this could reply to the
-            // wrong person. Low risk given the cooldown, but worth knowing.
             return "/r ";
         } else if (content.contains("Co-op >")) {
             return "/cc ";
@@ -168,13 +112,7 @@ public class AiChatMod implements ClientModInitializer {
         }
     }
 
-    /**
-     * Entry point for "/ducky ai gpt <prompt>". Unlike the chat-trigger path, this
-     * never sends anything over the network — the answer is shown only to you via
-     * sendSystemMessage, the same local-only mechanism used for error/usage messages
-     * elsewhere in this class. Shares the same cooldown as the chat trigger, since both
-     * consume the same API quota.
-     */
+
     public void handleGptCommand(String prompt) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
@@ -290,12 +228,7 @@ public class AiChatMod implements ClientModInitializer {
                 });
     }
 
-    /**
-     * Splits the AI's response into as many chat-length chunks as needed (breaking on
-     * word boundaries, never mid-word) and sends them as separate real chat messages,
-     * spaced out slightly so it doesn't look/behave like spam. Can be called from any
-     * thread — each send is individually marshaled onto the client thread.
-     */
+
     private void sendAiReplySplit(String response, String replyPrefix) {
         if (response == null || response.isBlank()) {
             return;
@@ -315,11 +248,7 @@ public class AiChatMod implements ClientModInitializer {
         sendChunksSequentially(chunks, replyPrefix, 0);
     }
 
-    /**
-     * Breaks text into pieces no longer than maxLen, splitting only at spaces so words
-     * are never cut in half. A single word longer than maxLen (rare) gets hard-split as
-     * a fallback so it can never produce an unbounded chunk.
-     */
+
     private List<String> splitIntoChunks(String text, int maxLen) {
         List<String> chunks = new ArrayList<>();
         if (maxLen <= 0) {
@@ -355,11 +284,7 @@ public class AiChatMod implements ClientModInitializer {
         return chunks;
     }
 
-    /**
-     * Sends one chunk, then schedules the next one after a short delay, until the list
-     * is exhausted. Each send hops onto the client thread via client.execute, since
-     * touching the network connection/player should happen there.
-     */
+
     private void sendChunksSequentially(List<String> chunks, String replyPrefix, int index) {
         if (index >= chunks.size()) {
             return;
@@ -389,13 +314,7 @@ public class AiChatMod implements ClientModInitializer {
                 .replace("\n", "\\n");
     }
 
-    /**
-     * Blocking network call — always run this off the render/client thread.
-     * Throws on any failure (bad status code, network error, parse error) instead of
-     * returning descriptive text, so a failure is never mistaken for a real AI answer
-     * and broadcast to a public/guild/party channel. Failures are caught by the
-     * .exceptionally() handler in handlePrompt and shown only to you, locally.
-     */
+    //says what error is
     private String queryGemini(String prompt) {
         try {
             String escapedPrompt = jsonEscape(prompt);
@@ -421,8 +340,7 @@ public class AiChatMod implements ClientModInitializer {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                // 429 = rate limited / out of quota (tokens exhausted), 400/403 = bad key
-                // or request. Either way, this must not be treated as a real answer.
+                // 429 = rate limited / out of quota (tokens exhausted), 400/403 = bad key or request
                 throw new RuntimeException(
                         "Gemini API returned status " + response.statusCode()
                                 + " — check your API key/quota. Body: "
@@ -441,8 +359,7 @@ public class AiChatMod implements ClientModInitializer {
             text = text.replace("\n", " ").trim();
 
             // Overall cap so one answer can't turn into a huge wall of split messages.
-            // The splitting itself (into per-message chunks) happens later, in
-            // sendAiReplySplit — this only bounds the total length before that.
+            // The splitting itself (into per-message chunks) happens later, ins endAiReplySplit — this only bounds the total length before that.
             if (text.length() > MAX_TOTAL_REPLY_LENGTH) {
                 text = text.substring(0, MAX_TOTAL_REPLY_LENGTH) + "...";
             }
@@ -455,10 +372,9 @@ public class AiChatMod implements ClientModInitializer {
         }
     }
 
-    /**
-     * Loads the API key from config/aichat.properties so it's never hardcoded
-     * or committed alongside the mod.
-     */
+
+     //Load API key from config/aichat.properties so it's never hardcoded (dont need people stealing my api key on release)
+
     private void loadConfig() {
         Path configPath = FabricLoader.getInstance().getConfigDir().resolve("aichat.properties");
         Properties props = new Properties();

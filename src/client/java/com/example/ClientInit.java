@@ -17,7 +17,8 @@ public class ClientInit implements ClientModInitializer {
 		new AiChatMod().onInitializeClient();
 
 
-		//com.example.chat.ChatResponder.enabled = true; // optional: start enabled
+
+
 	}}
 
 

@@ -24,7 +24,7 @@ public class ConfigClass {
     public volatile String systemInstructionPart2 =
             " ";
     public volatile String systemInstructionPart3 =
-            " ";// default, matches the old constant
+            " ";
 
     public static void load() {
         if (Files.exists(PATH)) {
