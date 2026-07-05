@@ -1,6 +1,7 @@
 package com.example.commands;
 
 import com.example.ConfigClass;
+import com.example.ai.AiChatMod;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -32,6 +33,13 @@ public class AiCommands {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommands.literal("ducky")
                     .then(ClientCommands.literal("ai")
+                            .then(ClientCommands.literal("gpt")
+                                    .then(ClientCommands.argument("prompt", StringArgumentType.greedyString())
+                                            .executes(context -> {
+                                                String prompt = StringArgumentType.getString(context, "prompt");
+                                                AiChatMod.INSTANCE.handleGptCommand(prompt);
+                                                return 1;
+                                            })))
                             .then(ClientCommands.literal("systeminstruction")
                                     .then(ClientCommands.literal("preview")
                                             .executes(context -> {
