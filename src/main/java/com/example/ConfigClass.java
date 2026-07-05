@@ -18,6 +18,7 @@ public class ConfigClass {
 
 
     public boolean airesponseEnabled = false;
+    public volatile int maxCharacters = 1000;
 
     public volatile String systemInstructionPart1 =
             "Keep responses concise, ideally under 1000 characters, since they need to fit into Minecraft chat messages. Do not use markdown formatting, asterisks, or emojis, since Minecraft chat can't render them.";

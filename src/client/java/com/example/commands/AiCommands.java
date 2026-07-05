@@ -15,7 +15,39 @@ public class AiCommands {
     public static void register() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommands.literal("ducky")
+                            .then(ClientCommands.literal("help")
+                                    .executes(context -> {
+                                        context.getSource().sendFeedback(
+                                                // Edit this line to whatever you want /ducky help to show.
+                                                Component.literal("go to the github readme i swear there is everything there if not contact me discord thekingducky. https://github.com/TheKingDucky/AI-Integration-Mod")
+                                                        .withStyle(ChatFormatting.WHITE)
+                                        );
+                                        return 1;
+                                    }))
                     .then(ClientCommands.literal("ai")
+                            .then(ClientCommands.literal("maxcharacters")
+                                    .then(ClientCommands.literal("preview")
+                                            .executes(context -> {
+                                                context.getSource().sendFeedback(
+                                                        Component.literal("Max AI reply length is currently: ")
+                                                                .withStyle(ChatFormatting.GOLD)
+                                                                .append(Component.literal(String.valueOf(ConfigClass.INSTANCE.maxCharacters))
+                                                                        .withStyle(ChatFormatting.WHITE))
+                                                );
+                                                return 1;
+                                            }))
+                                    .then(ClientCommands.argument("amount", IntegerArgumentType.integer(1))
+                                            .executes(context -> {
+                                                int amount = IntegerArgumentType.getInteger(context, "amount");
+                                                ConfigClass.INSTANCE.maxCharacters = amount;
+                                                ConfigClass.save();
+
+                                                context.getSource().sendFeedback(
+                                                        Component.literal("Max AI reply length set to " + amount + " characters.")
+                                                                .withStyle(ChatFormatting.GREEN)
+                                                );
+                                                return 1;
+                                            })))
                             .then(ClientCommands.literal("gpt")
                                     .then(ClientCommands.argument("prompt", StringArgumentType.greedyString())
                                             .executes(context -> {

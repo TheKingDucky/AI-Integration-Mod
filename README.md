@@ -52,10 +52,15 @@ and then ill be gucci
 
 ok thats it have fun
 
-
+oh also you can change the max amount of characters that the mod can send/process using /ducky ai maxcharacters (number) or (preview) to see what ur set to
 
 **what the error codes mean**
 error code 429: your api key ran out miraculously (like daily limit)
 good news for you you can create like 15 of these api keys for free and their limit *should* reset every day so like yeah just change ur config folder
 
 all the other error codes (400/403) mean try again later or wtv idk shouldnt be too common
+
+
+
+
+/ducky help is very useful

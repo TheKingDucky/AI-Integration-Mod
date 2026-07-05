@@ -39,8 +39,6 @@ public class AiChatMod implements ClientModInitializer {
     private static final long COOLDOWN_MS = 5000; // 5 seconds between requests
     private static final String MODEL = "gemini-2.5-flash";
 
-    // cap of model response relayed
-    private static final int MAX_TOTAL_REPLY_LENGTH = 1000;
 
     // Minecraft's vanilla per-message character limit with a little safety margin
     private static final int MAX_MESSAGE_LENGTH = 250;
@@ -360,8 +358,8 @@ public class AiChatMod implements ClientModInitializer {
 
             // Overall cap so one answer can't turn into a huge wall of split messages.
             // The splitting itself (into per-message chunks) happens later, ins endAiReplySplit — this only bounds the total length before that.
-            if (text.length() > MAX_TOTAL_REPLY_LENGTH) {
-                text = text.substring(0, MAX_TOTAL_REPLY_LENGTH) + "...";
+            if (text.length() > ConfigClass.INSTANCE.maxCharacters) {
+                text = text.substring(0, ConfigClass.INSTANCE.maxCharacters) + "...";
             }
             return text;
 
