@@ -20,7 +20,7 @@ public class ConfigClass {
     public boolean airesponseEnabled = false;
 
     public volatile String systemInstructionPart1 =
-            "Keep responses concise, ideally under 500 characters, since they need to fit into Minecraft chat messages. Do not use markdown formatting, asterisks, or emojis, since Minecraft chat can't render them.";
+            "Keep responses concise, ideally under 1000 characters, since they need to fit into Minecraft chat messages. Do not use markdown formatting, asterisks, or emojis, since Minecraft chat can't render them.";
     public volatile String systemInstructionPart2 =
             " ";
     public volatile String systemInstructionPart3 =
