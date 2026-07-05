@@ -28,7 +28,7 @@ basically theres 2 things the mod does
 the default key to open the settings is "o" but you can change this where you change all your other keybinds
 again here is where you can toggle the 2nd feature
 
-
+oh also theres like a 5s  cooldown between prompts can be processed
 
 OK FEATURES AND MAKING SURE YOU DONT GET MUTED!!!
 
