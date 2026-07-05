@@ -59,7 +59,7 @@ public class AiChatMod implements ClientModInitializer {
     // Overall cap on how much of the model's answer we'll ever relay, regardless of how
     // many chat messages that takes. Keeps one huge answer from turning into a wall of
     // 15+ messages. Raise/lower this to trade off completeness vs. chat spam.
-    private static final int MAX_TOTAL_REPLY_LENGTH = 1000;
+
 
     // Minecraft's vanilla per-message character limit (with a little safety margin).
     private static final int MAX_MESSAGE_LENGTH = 250;
@@ -443,8 +443,8 @@ public class AiChatMod implements ClientModInitializer {
             // Overall cap so one answer can't turn into a huge wall of split messages.
             // The splitting itself (into per-message chunks) happens later, in
             // sendAiReplySplit — this only bounds the total length before that.
-            if (text.length() > MAX_TOTAL_REPLY_LENGTH) {
-                text = text.substring(0, MAX_TOTAL_REPLY_LENGTH) + "...";
+            if (text.length() > ConfigClass.INSTANCE.maxCharacters) {
+                text = text.substring(0, ConfigClass.INSTANCE.maxCharacters) + "...";
             }
             return text;
 

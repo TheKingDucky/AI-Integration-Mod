@@ -9,30 +9,45 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
-/**
- * Registers "/ducky ai systeminstruction ..." as a client-side command.
- *
- * This is purely local — like the "preview" feedback, none of it is sent to the server
- * or visible to other players. It just edits the fields in ConfigClass that AiChatMod
- * reads from on every request, and saves them to disk immediately so they survive a
- * restart.
- *
- * Usage:
- *   /ducky ai systeminstruction 1 <text>   -> sets ConfigClass.INSTANCE.systemInstructionPart1
- *   /ducky ai systeminstruction 2 <text>   -> sets ConfigClass.INSTANCE.systemInstructionPart2
- *   /ducky ai systeminstruction 3 <text>   -> sets ConfigClass.INSTANCE.systemInstructionPart3
- *   /ducky ai systeminstruction 1 clear    -> blanks part 1 (likewise for 2, 3)
- *   /ducky ai systeminstruction preview    -> displays all three parts locally
- *
- * Call AiCommands.register() once from your client entrypoint's onInitializeClient(),
- * the same way you wired up AiChatMod.
- */
+
 public class AiCommands {
 
     public static void register() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommands.literal("ducky")
+                    .then(ClientCommands.literal("help")
+                            .executes(context -> {
+                                context.getSource().sendFeedback(
+                                        // Edit this line to whatever you want /ducky help to show.
+                                        Component.literal("go to the github readme i swear there is everything there if not contact me discord thekingducky. https://github.com/TheKingDucky/AI-Integration-Mod")
+                                                .withStyle(ChatFormatting.WHITE)
+                                );
+                                return 1;
+                            }))
                     .then(ClientCommands.literal("ai")
+                            .then(ClientCommands.literal("maxcharacters")
+                                    .then(ClientCommands.literal("preview")
+                                            .executes(context -> {
+                                                context.getSource().sendFeedback(
+                                                        Component.literal("Max AI reply length is currently: ")
+                                                                .withStyle(ChatFormatting.GOLD)
+                                                                .append(Component.literal(String.valueOf(ConfigClass.INSTANCE.maxCharacters))
+                                                                        .withStyle(ChatFormatting.WHITE))
+                                                );
+                                                return 1;
+                                            }))
+                                    .then(ClientCommands.argument("amount", IntegerArgumentType.integer(1))
+                                            .executes(context -> {
+                                                int amount = IntegerArgumentType.getInteger(context, "amount");
+                                                ConfigClass.INSTANCE.maxCharacters = amount;
+                                                ConfigClass.save();
+
+                                                context.getSource().sendFeedback(
+                                                        Component.literal("Max AI reply length set to " + amount + " characters.")
+                                                                .withStyle(ChatFormatting.GREEN)
+                                                );
+                                                return 1;
+                                            })))
                             .then(ClientCommands.literal("gpt")
                                     .then(ClientCommands.argument("prompt", StringArgumentType.greedyString())
                                             .executes(context -> {
