@@ -16,7 +16,6 @@ public class ConfigClass {
 
     public static ConfigClass INSTANCE = new ConfigClass();
 
-    public volatile int maxCharacters = 1000;
     public boolean chatEnabled = true;
     public boolean airesponseEnabled = false;
     public boolean pandaEnabled = false;
