@@ -36,13 +36,27 @@ public class Autofishing {
     private static final int MIN_CAST_DELAY_TICKS = 7;   // 2s
     private static final int MAX_CAST_DELAY_TICKS = 15;   // 4s
 
-    // How long to wait after casting before we start actively watching the
-    // bobber for a bite. Fixed at 20 ticks (1 second) - no more "settled"
-    // detection, just a flat wait.
+    // How long to wait after casting before we even start checking whether
+    // the bobber has settled. Fixed at 20 ticks (1 second) - no more
+    // "settled" guesswork here, that's handled by the phase below.
     private static final int WAIT_TICKS_BEFORE_WATCHING = 20;
 
+    // --- Settle-detection tuning ---
+    // On fast-reel worlds the bobber sometimes hasn't finished rising to the
+    // surface by the time WAIT_TICKS_BEFORE_WATCHING elapses. Instead of
+    // immediately trusting the timer, we require the bobber's Y position to
+    // stay under the bite-sensitivity threshold for several consecutive
+    // ticks in a row before we start treating movement as a real bite.
+    private static final int MIN_SETTLE_STABLE_TICKS = 3;
+
+    // Failsafe: if the bobber never settles cleanly (choppy water, waves,
+    // whatever), don't wait forever - just start watching for bites anyway
+    // after this many extra ticks past the initial wait.
+    private static final int MAX_ADDITIONAL_SETTLE_TICKS = 40; // +2s cap
+
     // How much the bobber's Y position has to change tick-to-tick for us to
-    // treat it as a bite. Now lives on ConfigClass so the settings screen
+    // treat it as movement (used both to detect "still settling" and to
+    // detect an actual bite). Lives on ConfigClass so the settings screen
     // slider can read/write it live. Default value is set wherever
     // ConfigClass.INSTANCE.fishingSensitivity is initialized (e.g. 0.01D).
 
@@ -61,6 +75,11 @@ public class Autofishing {
     //private static boolean enabled = true;
     private static boolean registered = false;
     private static int ticksSinceCast = 0;
+
+    // Settle-phase tracking (reset on every new cast)
+    private static boolean settled = false;
+    private static int stableTickCount = 0;
+    private static int settleTicksElapsed = 0;
 
     // Set to true temporarily to print state-change messages to chat.
     // Turn this off once everything's working - it's noisy.
@@ -121,9 +140,16 @@ public class Autofishing {
         if (hook != null) {
             lastBobberY = hook.getY();
             ticksSinceCast = 0;
+            resetSettleTracking();
             state = State.WAITING_FOR_BITE;
-            debug("Detected cast line out, waiting " + WAIT_TICKS_BEFORE_WATCHING + " ticks before watching for a bite.");
+            debug("Detected cast line out, waiting " + WAIT_TICKS_BEFORE_WATCHING + " ticks before checking for settle.");
         }
+    }
+
+    private static void resetSettleTracking() {
+        settled = false;
+        stableTickCount = 0;
+        settleTicksElapsed = 0;
     }
 
     private static void watchForBite(LocalPlayer player) {
@@ -137,18 +163,44 @@ public class Autofishing {
 
         double currentY = hook.getY();
 
-        // Phase 1: flat 1-second wait after casting before we start
-        // watching for bites at all.
+        // Phase 1: flat wait after casting before we even start looking at
+        // bobber movement.
         if (ticksSinceCast < WAIT_TICKS_BEFORE_WATCHING) {
             ticksSinceCast++;
             lastBobberY = currentY;
             return;
         }
 
-        // Phase 2: watch for any change in bobber height = bite.
         double deltaY = currentY - lastBobberY;
         lastBobberY = currentY;
 
+        // Phase 2: wait for the bobber to actually settle at the surface
+        // before we start treating movement as a bite. Without this, a
+        // bobber that's still rising from the cast (common on fast-reel
+        // worlds) can get misread as a bite the instant the timer expires.
+        if (!settled) {
+            if (Math.abs(deltaY) > ConfigClass.INSTANCE.fishingSensitivity) {
+                // Still moving noticeably -> not settled yet, reset the streak.
+                stableTickCount = 0;
+            } else {
+                stableTickCount++;
+            }
+
+            settleTicksElapsed++;
+
+            if (stableTickCount >= MIN_SETTLE_STABLE_TICKS) {
+                settled = true;
+                debug("Bobber settled after " + settleTicksElapsed + " extra tick(s), now watching for bites.");
+            } else if (settleTicksElapsed >= MAX_ADDITIONAL_SETTLE_TICKS) {
+                // Failsafe so we never get stuck if the bobber never fully
+                // stops moving (waves, lag, etc.).
+                settled = true;
+                debug("Settle timeout hit (" + settleTicksElapsed + " ticks); watching for bites anyway.");
+            }
+            return; // don't let settling motion count as a bite
+        }
+
+        // Phase 3: actively watching for a real bite.
         if (Math.abs(deltaY) > ConfigClass.INSTANCE.fishingSensitivity) {
             debug("Bite detected! deltaY=" + deltaY);
             ticksUntilNextAction = randomBetween(MIN_REEL_DELAY_TICKS, MAX_REEL_DELAY_TICKS);
@@ -183,6 +235,7 @@ public class Autofishing {
         state = State.WAITING_FOR_BITE;
         lastBobberY = Double.NaN;
         ticksSinceCast = 0;
+        resetSettleTracking();
     }
 
     private static boolean isHoldingFishingRod(LocalPlayer player) {
